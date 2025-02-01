@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loading...</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #00ff99;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+    }
+    .card {
+      background-color: #1e1e1e;
+      border: 1px solid #00ff99;
+      border-radius: 10px;
+      padding: 20px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+    .card h1 {
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+    }
+    .loading-text {
+      font-size: 1rem;
+      margin-top: 20px;
+    }
+    .loading-spinner {
+      margin-top: 10px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top: 4px solid #00ff99;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Processing Your Request...</h1>
+    <div class="loading-text">Please wait while we process your data.</div>
+    <div class="loading-spinner"></div>
+    <div id="details" class="loading-text" style="margin-top: 20px;"></div>
+  </div>
+
+  <script>
+    // Fonction pour extraire les paramètres de l'URL
+    function getUrlParams() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return {
+        type: urlParams.get('type'),
+        title: urlParams.get('title'),
+        description: urlParams.get('description'),
+        name: urlParams.get('name'),
+        email: urlParams.get('email')
+      };
+    }
+
+    // Récupérer les paramètres de l'URL
+    const params = getUrlParams();
+
+    // Afficher les informations de traitement en fonction du type
+    let detailsText = '';
+    let apiUrl = '';
+    if (params.type === 'report') {
+      if (params.title && params.description && params.name && params.email) {
+        detailsText = `
+          <strong>Report Title:</strong> ${params.title} <br>
+          <strong>Description:</strong> ${params.description} <br>
+          <strong>Name/Username:</strong> ${params.name} <br>
+          <strong>Email:</strong> ${params.email} <br>
+        `;
+        apiUrl = `https://script.google.com/macros/s/AKfycbzPyppASvoqjNoR9mSKvRXW9LV3QJC05iKS3upC90fnS6GEK325hG2BexVBYxSz_9HBfg/exec?action=reportProblem&name=${encodeURIComponent(params.name)}&email=${encodeURIComponent(params.email)}&reportTitle=${encodeURIComponent(params.title)}&reportDescription=${encodeURIComponent(params.description)}`;
+      } else {
+        detailsText = 'Error: Missing required parameters for report.';
+      }
+    } else if (params.type === 'feedback') {
+      if (params.description && params.name && params.email) {
+        detailsText = `
+          <strong>Feedback:</strong> ${params.description} <br>
+          <strong>Name/Username:</strong> ${params.name} <br>
+          <strong>Email:</strong> ${params.email} <br>
+        `;
+        apiUrl = `https://script.google.com/macros/s/AKfycbzPyppASvoqjNoR9mSKvRXW9LV3QJC05iKS3upC90fnS6GEK325hG2BexVBYxSz_9HBfg/exec?action=giveFeedback&name=${encodeURIComponent(params.name)}&email=${encodeURIComponent(params.email)}&title=${encodeURIComponent(params.title)}&description=${encodeURIComponent(params.description)}`;
+      } else {
+        detailsText = 'Error: Missing required parameters for feedback.';
+      }
+    } else {
+      detailsText = 'Error: Unknown type.';
+    }
+
+    // Afficher les détails dans la page
+    document.getElementById('details').innerHTML = detailsText;
+
+    // Fonction pour envoyer les données à l'API
+    function sendToApi() {
+      fetch(apiUrl, {
+        method: 'GET',
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Success:', data);
+        setTimeout(() => {
+          window.location.href = 'thank-you.html';  // Rediriger après le traitement
+        }, 2000);  // Timeout de 2 secondes
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+        setTimeout(() => {
+          window.location.href = 'error.html';  // Rediriger en cas d'erreur
+        }, 2000);
+      });
+    }
+
+    // Si l'URL et les paramètres sont valides, envoyer les données
+    if (apiUrl) {
+      sendToApi();
+    }
+  </script>
+</body>
+</html>
